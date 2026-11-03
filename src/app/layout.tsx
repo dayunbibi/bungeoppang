@@ -1,7 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
+// OG image lives in app/opengraph-image.png (Next adds the meta tags automatically).
+// metadataBase turns it into an absolute URL, which Threads/Kakao need for the preview.
 export const metadata: Metadata = {
+  metadataBase: new URL("https://bungeoppang-seven.vercel.app"),
   title: "온라인 붕어빵 굽기",
   description: "반죽 붓고, 속 넣고, 타이밍 맞춰 뒤집기. 오늘의 붕어빵을 구워보세요.",
   openGraph: {
@@ -9,6 +12,9 @@ export const metadata: Metadata = {
     description: "황금 붕어빵 도전! 반죽 붓고 타이밍 맞춰 뒤집기",
     locale: "ko_KR",
     type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
   },
 };
 
