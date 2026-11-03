@@ -18,6 +18,17 @@ export default function Home() {
         </header>
 
         <BungeoGame />
+
+        {/* same series, send people to the other game */}
+        <footer className="mt-4 border-t border-line pt-4 text-center text-sm text-ink-dim">
+          김장철이라면{" "}
+          <a
+            href="https://kimjang-five.vercel.app"
+            className="font-ui text-ink underline decoration-lamp decoration-2 underline-offset-4"
+          >
+            🥬 온라인 김장하기
+          </a>
+        </footer>
       </main>
     </>
   );

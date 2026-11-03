@@ -29,15 +29,27 @@ function wrapText(c: CanvasRenderingContext2D, text: string, x: number, y: numbe
   c.fillText(line, x, yy);
 }
 
+// Google Fonts splits Korean fonts into small chunks and only downloads the ones
+// the page actually shows. Text that only exists on the canvas never triggers a download,
+// so document.fonts.ready isn't enough — load each font for the exact text first.
+async function loadFontsFor(text: string) {
+  const families = ['"Black Han Sans"', "Jua", '"Gowun Dodum"'];
+  try {
+    await Promise.all(families.map((f) => document.fonts.load(`40px ${f}`, text)));
+  } catch {
+    // worst case the card uses a fallback font, still fine
+  }
+}
+
 // 1080x1920 (9:16) so it drops straight into an Instagram story
 export async function makeResultImage(input: CardInput): Promise<Blob> {
   const { verdict, fill, dA, dB, filling, blobs, count } = input;
   const fl = FILLINGS[filling];
 
-  // make sure the Korean fonts are ready, otherwise canvas falls back to system fonts
-  try {
-    await document.fonts.ready;
-  } catch {}
+  const sides = `앞면 ${sideLabel(dA)} · 뒷면 ${sideLabel(dB)}`;
+  const fillingLine = `속: ${fl.name} (${fl.type})`;
+  const footer = count ? `온라인 붕어빵 굽기 · 오늘 ${count}번째` : "온라인 붕어빵 굽기";
+  await loadFontsFor(["오늘의 붕어빵", verdict.title, verdict.line, sides, fillingLine, `${verdict.score}점`, footer].join(""));
 
   const W = 1080;
   const H = 1920;
@@ -81,8 +93,8 @@ export async function makeResultImage(input: CardInput): Promise<Blob> {
 
   c.font = "42px Jua, sans-serif";
   c.fillStyle = "#b9a99c";
-  c.fillText(`앞면 ${sideLabel(dA)} · 뒷면 ${sideLabel(dB)}`, W / 2, 1500);
-  c.fillText(`속: ${fl.name} (${fl.type})`, W / 2, 1570);
+  c.fillText(sides, W / 2, 1500);
+  c.fillText(fillingLine, W / 2, 1570);
 
   c.fillStyle = "#f5b041";
   c.font = '140px "Black Han Sans", sans-serif';
@@ -90,7 +102,7 @@ export async function makeResultImage(input: CardInput): Promise<Blob> {
 
   c.fillStyle = "#7d6d70";
   c.font = "34px Jua, sans-serif";
-  c.fillText(count ? `온라인 붕어빵 굽기 · 오늘 ${count}번째` : "온라인 붕어빵 굽기", W / 2, 1860);
+  c.fillText(footer, W / 2, 1860);
 
   return new Promise((resolve, reject) => {
     canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("toBlob failed"))), "image/png");
