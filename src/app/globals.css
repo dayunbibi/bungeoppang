@@ -1,0 +1,122 @@
+@import "tailwindcss";
+
+/* street cart at night: striped tarp, lamp light, cast iron mold */
+@theme {
+  --color-night: #221a1d;
+  --color-night-2: #2e2327;
+  --color-tarp: #c8432f;
+  --color-tarp-light: #f3e6cf;
+  --color-lamp: #f5b041;
+  --color-lamp-dark: #a86a12;
+  --color-ink: #f6ece0;
+  --color-ink-dim: #b9a99c;
+  --color-line: #4a3a3f;
+  --color-good: #e9b544;
+  --color-warn: #e07b39;
+  --color-bad: #c4412f;
+
+  --font-sign: "Black Han Sans", "Jua", system-ui, sans-serif;
+  --font-ui: "Jua", "Gowun Dodum", system-ui, sans-serif;
+  --font-body: "Gowun Dodum", system-ui, sans-serif;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  background: var(--color-night);
+  color: var(--color-ink);
+}
+
+body {
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+/* red/cream striped awning with scalloped edge */
+.awning {
+  position: relative;
+  height: 34px;
+  background: repeating-linear-gradient(90deg, var(--color-tarp) 0 34px, var(--color-tarp-light) 34px 68px);
+}
+.awning::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -12px;
+  height: 12px;
+  background:
+    radial-gradient(circle at 17px 0, var(--color-tarp) 16px, transparent 17px) 0 0 / 68px 12px repeat-x,
+    radial-gradient(circle at 51px 0, var(--color-tarp-light) 16px, transparent 17px) 0 0 / 68px 12px repeat-x;
+}
+
+.hint {
+  margin: 0;
+  min-height: 1.5em;
+  text-align: center;
+  font-family: var(--font-ui);
+  font-size: 19px;
+}
+.hint small {
+  display: block;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--color-ink-dim);
+}
+
+@layer components {
+  .btn {
+    font-family: var(--font-ui);
+    font-size: 18px;
+    color: var(--color-night);
+    background: var(--color-lamp);
+    border-radius: 12px;
+    padding: 14px 22px;
+    cursor: pointer;
+    box-shadow: 0 4px 0 var(--color-lamp-dark);
+    transition:
+      transform 0.08s,
+      box-shadow 0.08s;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  .btn:active,
+  .btn.pressing {
+    transform: translateY(3px);
+    box-shadow: 0 1px 0 var(--color-lamp-dark);
+  }
+  .btn:focus-visible {
+    outline: 3px solid var(--color-ink);
+    outline-offset: 3px;
+  }
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+  .btn-big {
+    font-size: 21px;
+    padding: 18px;
+  }
+  .btn-chip {
+    color: var(--color-ink);
+    background: var(--color-night-2);
+    border: 1px solid var(--color-line);
+    box-shadow: 0 4px 0 #120d0f;
+  }
+  .btn-ghost {
+    color: var(--color-ink);
+    background: transparent;
+    border: 1px solid var(--color-line);
+    box-shadow: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn {
+    transition: none;
+  }
+}
