@@ -5,11 +5,11 @@ import "./globals.css";
 // metadataBase turns it into an absolute URL, which Threads/Kakao need for the preview.
 export const metadata: Metadata = {
   metadataBase: new URL("https://bungeoppang-seven.vercel.app"),
-  title: "온라인 붕어빵 굽기",
-  description: "반죽 붓고, 속 넣고, 타이밍 맞춰 뒤집기. 오늘의 붕어빵을 구워보세요.",
+  title: "포잎이의 붕어빵 가게",
+  description: "포잎이 사장님과 붕어빵을 굽고, 손님 주문을 완성하고, 작은 가게를 운영해요.",
   openGraph: {
-    title: "온라인 붕어빵 굽기",
-    description: "황금 붕어빵 도전! 반죽 붓고 타이밍 맞춰 뒤집기",
+    title: "포잎이의 붕어빵 가게",
+    description: "포잎이와 함께하는 따끈따끈 붕어빵 가게 운영 게임",
     locale: "ko_KR",
     type: "website",
   },
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#221a1d",
+  themeColor: "#f8f5eb",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
