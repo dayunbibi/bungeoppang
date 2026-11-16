@@ -13,14 +13,7 @@ import {
   type Flavor,
 } from "@/lib/shop";
 
-const names = [
-  "",
-  "어서 오세요!",
-  "집중해서 굽는 중",
-  "야호! 잘 구웠다!",
-  "앗, 어떡하지?",
-  "맛있게 드세요!",
-];
+const guestArt = ["rabbit", "bear", "dog", "hamster", "cat"];
 function Fish({ color = "#eeb454" }: { color?: string }) {
   return (
     <svg viewBox="0 0 120 70" aria-hidden="true">
@@ -47,6 +40,33 @@ export default function PoipiShop() {
     [flavor, setFlavor] = useState<Flavor>("red"),
     [best, setBest] = useState(0),
     [help, setHelp] = useState(false);
+  const [hand, setHand] = useState("hands");
+  const [handAction, setHandAction] = useState(0);
+  const [thanks, setThanks] = useState<string | null>(null);
+  useEffect(() => {
+    if (hand === "hands") return;
+    const timer = setTimeout(() => setHand("hands"), 1150);
+    return () => clearTimeout(timer);
+  }, [hand, handAction]);
+  useEffect(() => {
+    if (!thanks) return;
+    const timer = setTimeout(() => setThanks(null), 1800);
+    return () => clearTimeout(timer);
+  }, [thanks]);
+  function handleSlot(index: number) {
+    if (shop.mode !== "open" || shop.paused || help) return;
+    setHand(shop.slots[index].stage === "empty" ? "pour" : "flip");
+    setHandAction((n) => n + 1);
+    setShop((s) => actSlot(s, index, flavor));
+  }
+  function deliver(id: number) {
+    const order = shop.orders.find((o) => o.id === id);
+    if (!order || !canServe(shop, order) || shop.paused || help) return;
+    setThanks(guestArt[(id - 1) % guestArt.length]);
+    setHand("serve");
+    setHandAction((n) => n + 1);
+    setShop((s) => serveOrder(s, id));
+  }
   useEffect(() => {
     try {
       setBest(Number(localStorage.getItem("poipi-shop-best-v1")) || 0);
@@ -74,9 +94,9 @@ export default function PoipiShop() {
       );
     } catch {}
   }, [shop.mode, shop.coins]);
-  const active = shop.mode === "open" && !shop.paused;
+  const active = shop.mode === "open" && !shop.paused && !help;
   return (
-    <main className="shop-shell">
+    <main className="shop-shell pov-shop">
       <header className="shop-header">
         <Link className="brand" href="/">
           🍀 POIPI’S LITTLE SHOP
@@ -95,7 +115,9 @@ export default function PoipiShop() {
           <h1>
             포잎이의 <span>붕어빵 가게</span>
           </h1>
-          <p className="subtitle">작은 틀에서 시작하는, 나만의 달콤한 하루.</p>
+          <p className="subtitle">
+            당신은 포잎이 사장님! 오늘도 따뜻한 한 봉지를 건네요.
+          </p>
         </div>
         <span className="day-stamp">
           DAY {String(shop.day).padStart(2, "0")}
@@ -137,23 +159,52 @@ export default function PoipiShop() {
           <div className="shop-awning">
             <span>🍀 포잎이네 · 갓 구운 붕어빵 🍀</span>
           </div>
-          <div className="customers">
+          <div className="customers street-scene">
+            <div className="village" aria-hidden="true">
+              <i />
+              <i />
+              <i />
+              <i />
+              <i />
+            </div>
+            <div className="snowfall" aria-hidden="true">
+              ✧ · ˚ · ✧ · ˚ · ✧
+            </div>
+            <div className="street-sign" aria-hidden="true">
+              행운 골목 <span>LUCKY LANE</span>
+            </div>
             <div className="queue-label">
               오늘도 찾아줘서 고마워요<span>{shop.orders.length} / 3</span>
             </div>
             <div className="customer-row">
               {shop.orders.map((o) => (
-                <article className="customer" key={o.id}>
+                <article
+                  className={`customer ${o.patience / o.max < 0.3 ? "impatient" : ""}`}
+                  key={o.id}
+                >
                   <div className="order-bubble">
                     <strong>
                       {o.red > 0 ? `팥 ${o.red}개` : ""}
                       {o.red > 0 && o.cream > 0 ? " + " : ""}
                       {o.cream > 0 ? `슈크림 ${o.cream}개` : ""}
                     </strong>
-                    <span>부탁해요 ♡</span>
+                    <span>
+                      {o.patience / o.max < 0.3
+                        ? "사장님, 제 빵은요…?"
+                        : "따끈하게 부탁해요 ♡"}
+                    </span>
                   </div>
-                  <div className="guest-face" aria-hidden="true">
-                    {o.face}
+                  <div className="guest-portrait">
+                    <Image
+                      src={`/shop/${guestArt[(o.id - 1) % guestArt.length]}.webp`}
+                      width={260}
+                      height={260}
+                      alt={o.name}
+                      unoptimized
+                    />
+                    {o.patience / o.max < 0.3 && (
+                      <span className="worry-mark">💧</span>
+                    )}
                   </div>
                   <small>{o.name}</small>
                   <progress
@@ -163,13 +214,26 @@ export default function PoipiShop() {
                   />
                   <button
                     disabled={!active || !canServe(shop, o)}
-                    onClick={() => setShop((s) => serveOrder(s, o.id))}
+                    onClick={() => deliver(o.id)}
                   >
                     {canServe(shop, o) ? "봉투 전달하기" : "굽는 중…"}
                   </button>
                 </article>
               ))}
-              {shop.orders.length === 0 && (
+              {thanks && (
+                <div className="thank-you" role="status">
+                  <Image
+                    src={`/shop/${thanks}.webp`}
+                    width={150}
+                    height={150}
+                    alt="기뻐하는 손님"
+                    unoptimized
+                  />
+                  <strong>고마워요, 포잎이! ♡</strong>
+                  <span>따뜻하게 잘 먹을게요!</span>
+                </div>
+              )}
+              {shop.orders.length === 0 && !thanks && (
                 <p className="empty-queue">
                   {shop.mode === "ready"
                     ? "곧 손님들이 찾아올 거예요."
@@ -179,26 +243,9 @@ export default function PoipiShop() {
               )}
             </div>
           </div>
-          <div className="owner-area">
-            <div className="chalkboard">
-              오늘의 메뉴<strong>팥 · 슈크림</strong>
-              <span>한 마리 700원</span>
-              <i>정성은 듬뿍 ♡</i>
-            </div>
-            <div className="owner">
-              <Image
-                src={`/poipi/${shop.mood}.webp`}
-                width={300}
-                height={300}
-                alt={`포잎이 사장님: ${names[shop.mood]}`}
-                priority
-                unoptimized
-              />
-              <span className="owner-label">사장님 포잎이</span>
-            </div>
-            <div className="tiny-plant" aria-hidden="true">
-              🌱<span>행운이 자라는 가게</span>
-            </div>
+          <div className="service-ledge">
+            <span>🍀 포잎이 사장님 시점</span>
+            <span>갓 구운 행복, 한 마리 700원</span>
           </div>
           <div className="counter">
             <div className="counter-top">
@@ -225,10 +272,15 @@ export default function PoipiShop() {
                     className={`mold ${cooking ? "cooking" : ""} ${burnt ? "burnt" : ""}`}
                     key={i}
                     disabled={!active}
-                    onClick={() => setShop((s) => actSlot(s, i, flavor))}
+                    onClick={() => handleSlot(i)}
                     aria-label={`${i + 1}번 틀 ${label}`}
                   >
                     <span className="slot-number">0{i + 1}</span>
+                    {cooking && !burnt && (
+                      <span className="steam" aria-hidden="true">
+                        〰 〰
+                      </span>
+                    )}
                     {v.stage === "empty" ? (
                       <div className="empty-fish">
                         <Fish color="#665c51" />
@@ -281,6 +333,20 @@ export default function PoipiShop() {
                 );
               })}
             </div>
+            <div
+              className="pov-hands"
+              key={handAction}
+              data-action={hand}
+              aria-hidden="true"
+            >
+              <Image
+                src={`/shop/${hand}.webp`}
+                width={280}
+                height={280}
+                alt=""
+                unoptimized
+              />
+            </div>
             <div className="heat-legend">
               <span>◌ 덜 익음</span>
               <span>● 초록 구간에 뒤집고 꺼내요</span>
@@ -290,7 +356,7 @@ export default function PoipiShop() {
         </section>
         <aside className="side-panel">
           <section className="panel filling-panel">
-            <p className="eyebrow">01 · 재료 고르기</p>
+            <p className="eyebrow">01 · 조리대의 재료</p>
             <h2>어떤 속을 넣을까요?</h2>
             <div className="flavors">
               {(["red", "cream"] as Flavor[]).map((f) => (
@@ -300,7 +366,11 @@ export default function PoipiShop() {
                   className={flavor === f ? "selected" : ""}
                   onClick={() => setFlavor(f)}
                 >
-                  <span>{f === "red" ? "🫘" : "🍮"}</span>
+                  <span className={`ingredient-bowl ${f}`} aria-hidden="true">
+                    <i />
+                    <i />
+                    <i />
+                  </span>
                   <strong>
                     {f === "red" ? "달콤한 팥" : "부드러운 슈크림"}
                   </strong>
@@ -316,7 +386,7 @@ export default function PoipiShop() {
             </p>
           </section>
           <section className="panel stock-panel">
-            <p className="eyebrow">02 · 포장 준비</p>
+            <p className="eyebrow">02 · 준비된 붕어빵</p>
             <h2>따끈한 붕어빵 바구니</h2>
             <div className="stock-row">
               <span>🫘 팥 붕어빵</span>
